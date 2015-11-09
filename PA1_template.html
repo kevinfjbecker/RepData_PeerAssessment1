@@ -74,12 +74,33 @@ img {
 </div>
 <div id="what-is-mean-total-number-of-steps-taken-per-day" class="section level2">
 <h2>What is mean total number of steps taken per day?</h2>
-<p>(function(d) { ## get mean total d %&gt;% group_by(date) %&gt;% select(steps) %&gt;% summarise(stepsperday = sum(steps, na.rm = TRUE)) %&gt;% summarise(mean(stepsperday, rm.na = TRUE)) })(data)</p>
-<p>(function(d) { ## generate histogram perday &lt;- d %&gt;% group_by(date) %&gt;% select(steps) %&gt;% summarise(stepsperday = sum(steps, na.rm = TRUE))</p>
+<div id="calculate-the-total-number-of-steps-taken-per-day" class="section level3">
+<h3>1. Calculate the total number of steps taken per day</h3>
+<p>(function(d) { # get summarized steps per day d %&gt;% group_by(date) %&gt;% select(steps) %&gt;% summarise(stepsperday = sum(steps, na.rm = TRUE)) })(data)</p>
+</div>
+<div id="make-a-histogram-of-the-total-number-of-steps-taken-each-day" class="section level3">
+<h3>2. Make a histogram of the total number of steps taken each day</h3>
+<p>(function(d) { # generate histogram perday &lt;- d %&gt;% group_by(date) %&gt;% select(steps) %&gt;% summarise(stepsperday = sum(steps, na.rm = TRUE))</p>
 <p>qplot(perday$stepsperday, geom=“histogram”) })(data)</p>
+</div>
+<div id="calculate-and-report-the-mean-and-median-of-the-total-number-of-steps-taken-per-day" class="section level3">
+<h3>3. Calculate and report the mean and median of the total number of steps taken per day</h3>
+<p>(function(d) { # get mean daily total d %&gt;% group_by(date) %&gt;% select(steps) %&gt;% summarise(stepsperday = sum(steps, na.rm = TRUE)) %&gt;% summarise(mean(stepsperday, rm.na = TRUE)) })(data)</p>
+<p>(function(d) { # get median daily total d %&gt;% group_by(date) %&gt;% select(steps) %&gt;% summarise(stepsperday = sum(steps, na.rm = TRUE)) %&gt;% summarise(median(stepsperday)) })(data)</p>
+</div>
 </div>
 <div id="what-is-the-average-daily-activity-pattern" class="section level2">
 <h2>What is the average daily activity pattern?</h2>
+<div id="time-series-plot-of-average-number-of-steps-takenthe-per-5-minute-interval" class="section level3">
+<h3>1. Time series plot of average number of steps takenthe per 5-minute interval</h3>
+<p>(function(d) { # get summarized steps per day perinterval &lt;- d %&gt;% group_by(interval) %&gt;% select(steps) %&gt;% summarise(stepsperinterval = mean(steps, na.rm = TRUE))</p>
+<pre><code>plot(perinterval$interval, perinterval$stepsperinterval, type = 'l')</code></pre>
+<p>})(data)</p>
+</div>
+<div id="which-averaged-5-minute-interval-contains-the-maximum-number-of-steps" class="section level3">
+<h3>2. Which averaged 5-minute interval contains the maximum number of steps?</h3>
+<p>(function(d) { # get summarized steps per day d %&gt;% group_by(interval) %&gt;% select(steps) %&gt;% summarise(stepsperinterval = mean(steps, na.rm = TRUE)) %&gt;% filter(stepsperinterval == max(stepsperinterval)) })(data)</p>
+</div>
 </div>
 <div id="imputing-missing-values" class="section level2">
 <h2>Imputing missing values</h2>
