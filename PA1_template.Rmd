@@ -6,26 +6,31 @@ output:
 ---
 
 ## Libraries
+```{r}
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-
+```
 
 ## Loading and preprocessing the data
+```{r}
 data <- read.csv(unzip('activity.zip'))
-
+```
 
 ## What is mean total number of steps taken per day?
 
 ### 1. Calculate the total number of steps taken per day
+```{r}
 (function(d) { # get summarized steps per day
   d %>% 
     group_by(date) %>%
     select(steps) %>%
     summarise(stepsperday = sum(steps, na.rm = TRUE))
 })(data)
+```
 
 ### 2. Make a histogram of the total number of steps taken each day
+```{r}
 (function(d) { # generate histogram
   perday <- d %>% 
     group_by(date) %>%
@@ -34,8 +39,10 @@ data <- read.csv(unzip('activity.zip'))
 
   qplot(perday$stepsperday, geom="histogram")
 })(data)
+```
 
 ### 3. Calculate and report the mean and median of the total number of steps taken per day
+```{r}
 (function(d) { # get mean daily total
   d %>% 
     group_by(date) %>%
@@ -43,7 +50,9 @@ data <- read.csv(unzip('activity.zip'))
     summarise(stepsperday = sum(steps, na.rm = TRUE)) %>%
     summarise(mean(stepsperday, rm.na = TRUE))
 })(data)
+```
 
+```{r}
 (function(d) { # get median daily total
   d %>% 
     group_by(date) %>%
@@ -51,11 +60,13 @@ data <- read.csv(unzip('activity.zip'))
     summarise(stepsperday = sum(steps, na.rm = TRUE)) %>%
     summarise(median(stepsperday))
 })(data)
+```
 
 
 ## What is the average daily activity pattern?
 
 ### 1. Time series plot of average number of steps takenthe per 5-minute interval 
+```{r}
 (function(d) { # get summarized steps per day
   perinterval <- d %>% 
     group_by(interval) %>%
@@ -64,8 +75,10 @@ data <- read.csv(unzip('activity.zip'))
     
     plot(perinterval$interval, perinterval$stepsperinterval, type = 'l')
 })(data)
+```
 
 ### 2. Which averaged 5-minute interval contains the maximum number of steps?
+```{r}
 (function(d) { # get summarized steps per day
   d %>% 
     group_by(interval) %>%
@@ -73,12 +86,77 @@ data <- read.csv(unzip('activity.zip'))
     summarise(stepsperinterval = mean(steps, na.rm = TRUE)) %>%
     filter(stepsperinterval == max(stepsperinterval))
 })(data)
-
-
+```
 
 
 ## Imputing missing values
 
+### 1. Total number of missing values in the dataset
+```{r}
+(function(d){ # count row with na's
+  count(data, is.na(steps))
+})(data)
+```
+
+### 2. Data filling strategy
+
+Fill in all of the missing values in the dataset using the mean for that 5-minute interval.
+
+```{r}
+dataFillStrategy <- (function(d){
+  averageStepData <- d %>% 
+    group_by(interval) %>%
+    select(steps) %>%
+    summarise(stepsperinterval = mean(steps, na.rm = TRUE))
+
+  d %>%
+    left_join(averageStepData, by = 'interval') %>%
+    mutate(filledSteps = ifelse(is.na(steps), stepsperinterval, steps))
+})(data)
+```
+
+### 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+```{r}
+filledData <- dataFillStrategy %>%
+  select(filledSteps, date, interval) %>%
+  rename(steps = filledSteps)
+```
+### 4. Make a histogram of the total number of steps taken each day
+```{r}
+(function(d) { # generate histogram
+  perday <- d %>% 
+    group_by(date) %>%
+    select(steps) %>%
+    summarise(stepsperday = sum(steps, na.rm = TRUE))
+
+  qplot(perday$stepsperday, geom="histogram")
+})(filledData)
+```
+
+```{r}
+(function(d) { # get mean daily total
+  d %>% 
+    group_by(date) %>%
+    select(steps) %>%
+    summarise(stepsperday = sum(steps, na.rm = TRUE)) %>%
+    summarise(mean(stepsperday, rm.na = TRUE))
+})(filledData)
+```
+
+```{r}
+(function(d) { # get median daily total
+  d %>% 
+    group_by(date) %>%
+    select(steps) %>%
+    summarise(stepsperday = sum(steps, na.rm = TRUE)) %>%
+    summarise(median(stepsperday))
+})(filledData)
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+
+
+
+
