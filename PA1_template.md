@@ -4,22 +4,6 @@
 
 ```r
 library(dplyr)
-```
-
-```
-## 
-## Attaching package: 'dplyr'
-## 
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-## 
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
 library(tidyr)
 library(ggplot2)
 ```
@@ -130,8 +114,13 @@ data <- read.csv(unzip('activity.zip'))
     group_by(interval) %>%
     select(steps) %>%
     summarise(stepsperinterval = mean(steps, na.rm = TRUE))
-    
-    plot(perinterval$interval, perinterval$stepsperinterval, type = 'l')
+      
+  series <- ggplot(perinterval) +
+    aes(x = interval, y = stepsperinterval) +
+    geom_line()
+  
+  series
+  
 })(data)
 ```
 
@@ -262,7 +251,40 @@ filledData <- dataFillStrategy %>%
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
+```r
+isWeedendDay <- function (dateString) {
+  weekendDays <- c('Saturday', 'Sunday')
+  weekdays(as.Date(dateString)) %in% weekendDays
+}
+```
 
+
+```r
+weekPartSplit <- (function(d){
+  d %>%
+    mutate(weekPart = as.factor(ifelse(isWeedendDay(date), 'weekend','weekday')))
+})(filledData)
+```
+
+
+
+```r
+(function(d){
+  averageStepData <- d %>% 
+    group_by(interval, weekPart) %>%
+    select(steps) %>%
+    summarise(stepsperinterval = mean(steps, na.rm = TRUE))
+  
+  series <- ggplot(averageStepData) +
+    aes(x = interval, y = stepsperinterval) +
+    geom_line() +
+    facet_grid(weekPart ~ .)
+  
+  series
+})(weekPartSplit)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-17-1.png) 
 
 
 
