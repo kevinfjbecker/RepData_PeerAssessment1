@@ -1,79 +1,60 @@
 # Reproducible Research: Peer Assessment 1
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
 
 ## Libraries
+This assigment report relies on the dplyr and ggplot2 libraries.
 
 ```r
 library(dplyr)
-library(tidyr)
 library(ggplot2)
 ```
 
 ## Loading and preprocessing the data
+### 1. Load the data
+The data set was Unziped and read in from CSV.
 
 ```r
 data <- read.csv(unzip('activity.zip'))
 ```
+
+### Process/transform the data
+No transformations were performed prior to the initial analysis. Later in this analysis NA values are filled according to the described strategy.
 
 ## What is mean total number of steps taken per day?
 
 ### 1. Calculate the total number of steps taken per day
 
 ```r
-(function(d) { # get summarized steps per day
+stepsPerDay <- (function(d) { # get summarized steps per day
   d %>% 
     group_by(date) %>%
     select(steps) %>%
     summarise(stepsperday = sum(steps, na.rm = TRUE))
 })(data)
-```
-
-```
-## Source: local data frame [61 x 2]
-## 
-##          date stepsperday
-##        (fctr)       (int)
-## 1  2012-10-01           0
-## 2  2012-10-02         126
-## 3  2012-10-03       11352
-## 4  2012-10-04       12116
-## 5  2012-10-05       13294
-## 6  2012-10-06       15420
-## 7  2012-10-07       11015
-## 8  2012-10-08           0
-## 9  2012-10-09       12811
-## 10 2012-10-10        9900
-## ..        ...         ...
 ```
 
 ### 2. Make a histogram of the total number of steps taken each day
 
 ```r
 (function(d) { # generate histogram
-  perday <- d %>% 
-    group_by(date) %>%
-    select(steps) %>%
-    summarise(stepsperday = sum(steps, na.rm = TRUE))
 
-  qplot(perday$stepsperday, geom="histogram")
-})(data)
-```
-
-```
-## stat_bin: binwidth defaulted to range/30. Use 'binwidth = x' to adjust this.
+  qplot(d$stepsperday, geom="histogram") + 
+    labs(title = "Total Number of Steps Taken Each Day") +
+    labs(x = "Daily Steps") +
+    labs(y = "Occurance Count")
+  
+})(stepsPerDay)
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
 
 ### 3. Calculate and report the mean and median of the total number of steps taken per day
+#### Mean number of steps taken each day: 9354.23
 
 ```r
 (function(d) { # get mean daily total
-  d %>% 
-    group_by(date) %>%
-    select(steps) %>%
-    summarise(stepsperday = sum(steps, na.rm = TRUE)) %>%
-    summarise(mean(stepsperday, rm.na = TRUE))
-})(data)
+  d %>% summarise(mean(stepsperday, rm.na = TRUE))
+})(stepsPerDay)
 ```
 
 ```
@@ -83,16 +64,12 @@ data <- read.csv(unzip('activity.zip'))
 ##                             (dbl)
 ## 1                         9354.23
 ```
-
+#### Median number of steps taken each day: 10395
 
 ```r
 (function(d) { # get median daily total
-  d %>% 
-    group_by(date) %>%
-    select(steps) %>%
-    summarise(stepsperday = sum(steps, na.rm = TRUE)) %>%
-    summarise(median(stepsperday))
-})(data)
+  d %>% summarise(median(stepsperday))
+})(stepsPerDay)
 ```
 
 ```
@@ -106,7 +83,7 @@ data <- read.csv(unzip('activity.zip'))
 
 ## What is the average daily activity pattern?
 
-### 1. Time series plot of average number of steps takenthe per 5-minute interval 
+### 1. Time series plot of average number of steps taken per 5-minute interval 
 
 ```r
 (function(d) { # get summarized steps per day
@@ -117,7 +94,10 @@ data <- read.csv(unzip('activity.zip'))
       
   series <- ggplot(perinterval) +
     aes(x = interval, y = stepsperinterval) +
-    geom_line()
+    geom_line() +
+    labs(title = "Average Number of StepS per 5-minute Interval") +
+    labs(x = "5-Minute Interval") +
+    labs(y = "Number of Steps")
   
   series
   
@@ -127,6 +107,7 @@ data <- read.csv(unzip('activity.zip'))
 ![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
 
 ### 2. Which averaged 5-minute interval contains the maximum number of steps?
+#### 805 (8:05 AM) is the 5-minute interval that, on average, contains the maximum number of steps: 206.1698
 
 ```r
 (function(d) { # get summarized steps per day
@@ -150,6 +131,7 @@ data <- read.csv(unzip('activity.zip'))
 ## Imputing missing values
 
 ### 1. Total number of missing values in the dataset
+#### There are 2304 missing interval step values.
 
 ```r
 (function(d){ # count row with na's
@@ -168,7 +150,8 @@ data <- read.csv(unzip('activity.zip'))
 
 ### 2. Data filling strategy
 
-Fill in all of the missing values in the dataset using the mean for that 5-minute interval.
+#### Fill in all of the missing values in the dataset using the mean for that 5-minute interval.
+In the following code block an intermediary data set is produced, wherein the average per-interval number of steps is joined with the original data set. A new column is introduced "filledSteps", which is a combination of the inital steps data and avgerage data in place of NA entries.
 
 
 ```r
@@ -200,16 +183,16 @@ filledData <- dataFillStrategy %>%
     select(steps) %>%
     summarise(stepsperday = sum(steps, na.rm = TRUE))
 
-  qplot(perday$stepsperday, geom="histogram")
+  qplot(perday$stepsperday, geom="histogram") +
+    labs(title = "Total steps taken each day (with filled data)") +
+    labs(x = "Daily Steps") +
+    labs(y = "Occurance Count")
 })(filledData)
-```
-
-```
-## stat_bin: binwidth defaulted to range/30. Use 'binwidth = x' to adjust this.
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-12-1.png) 
 
+#### Mean number of steps taken each day: 10766.19
 
 ```r
 (function(d) { # get mean daily total
@@ -229,6 +212,7 @@ filledData <- dataFillStrategy %>%
 ## 1                        10766.19
 ```
 
+#### Median number of steps taken each day: 10766.19
 
 ```r
 (function(d) { # get median daily total
@@ -247,9 +231,13 @@ filledData <- dataFillStrategy %>%
 ##                 (dbl)
 ## 1            10766.19
 ```
+#### Do these values differ from the estimates from the first part of the assignment?
+Filling in the mising data values raised both the mean and median values. The inital calulations of the mean (9354.23) and the median (10395) differed, whereas the mean and median values for the fillted dated were the same.
+#### What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+#### A utility function for determining weekend days.
 
 ```r
 isWeedendDay <- function (dateString) {
@@ -258,6 +246,7 @@ isWeedendDay <- function (dateString) {
 }
 ```
 
+### 1: Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
 ```r
 weekPartSplit <- (function(d){
@@ -266,7 +255,7 @@ weekPartSplit <- (function(d){
 })(filledData)
 ```
 
-
+### 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
 ```r
 (function(d){
@@ -278,7 +267,10 @@ weekPartSplit <- (function(d){
   series <- ggplot(averageStepData) +
     aes(x = interval, y = stepsperinterval) +
     geom_line() +
-    facet_grid(weekPart ~ .)
+    facet_grid(weekPart ~ .) +
+    labs(title = "Average Number of Steps per 5-minute Interval") +
+    labs(x = "5-Minute Interval") +
+    labs(y = "Number of Steps")
   
   series
 })(weekPartSplit)
@@ -287,4 +279,9 @@ weekPartSplit <- (function(d){
 ![](PA1_template_files/figure-html/unnamed-chunk-17-1.png) 
 
 
+## Conclusions
+
+ - Weekdays show less activity in the middle of the day when compared to weekend activity.h
+ - Weekdays show a greater number of steps taken between 6AM and 8AM.
+ - Weekdays also show a distinct spike in the number of steps taken around 8AM--hurring to class/work ;-)
 
